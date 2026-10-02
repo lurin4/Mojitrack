@@ -8,7 +8,8 @@ def today_for(user):
 
 
 def streak(totals, today, target):
-    day = today if totals.get(today, 0) >= target else today - timedelta(days=1)
+    day = today if totals.get(
+        today, 0) >= target else today - timedelta(days=1)
     length = 0
     while totals.get(day, 0) >= target:
         length += 1
@@ -24,7 +25,8 @@ def daily_rows(logs, today, days):
     for i in range(days - 1, -1, -1):
         day = today - timedelta(days=i)
         media = dict(grouped[day])
-        result.append({"date": day.isoformat(), "chars": sum(media.values()), "media": media})
+        result.append({"date": day.isoformat(), "chars": sum(
+            media.values()), "media": media})
     return result
 
 

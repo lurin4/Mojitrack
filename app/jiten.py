@@ -24,7 +24,8 @@ async def fetch(path, params=None, refresh=False):
             return cache[key]
         remaining = blocked_until - time.time()
         if remaining > 0:
-            raise HTTPException(429, "Jiten is rate limited; try again later", headers={"Retry-After": str(int(remaining) + 1)})
+            raise HTTPException(429, "Jiten is rate limited; try again later", headers={
+                                "Retry-After": str(int(remaining) + 1)})
         await asyncio.sleep(max(0, 0.5 - (time.monotonic() - last_request)))
         last_request = time.monotonic()
         try:
@@ -36,18 +37,21 @@ async def fetch(path, params=None, refresh=False):
                     delay = float(retry)
                 except ValueError:
                     try:
-                        delay = parsedate_to_datetime(retry).timestamp() - time.time()
+                        delay = parsedate_to_datetime(
+                            retry).timestamp() - time.time()
                     except (ValueError, TypeError, OverflowError):
                         delay = 60
                 delay = max(1, min(delay, 86400))
                 blocked_until = time.time() + delay
-                raise HTTPException(429, "Jiten is rate limited; try again later", headers={"Retry-After": str(int(delay))})
+                raise HTTPException(429, "Jiten is rate limited; try again later", headers={
+                                    "Retry-After": str(int(delay))})
             response.raise_for_status()
             data = response.json()
             if not isinstance(data, dict):
                 raise TypeError("Expected an object")
         except (httpx.HTTPError, ValueError, TypeError):
-            raise HTTPException(502, "Jiten is unavailable or returned an unexpected response")
+            raise HTTPException(
+                502, "Jiten is unavailable or returned an unexpected response")
         cache[key] = data
         return data
 

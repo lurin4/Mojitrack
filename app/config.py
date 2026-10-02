@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     @classmethod
     def valid_secret(cls, value):
         if len(value) < 32 or value.startswith("replace-"):
-            raise ValueError("Set SECRET_KEY to a fresh random secret of at least 32 characters")
+            raise ValueError(
+                "Set SECRET_KEY to a fresh random secret of at least 32 characters")
         return value
 
     @field_validator("app_origin")
@@ -27,9 +28,11 @@ class Settings(BaseSettings):
         value = value.rstrip("/")
         parsed = urlsplit(value)
         if parsed.scheme not in ("http", "https") or not parsed.netloc or parsed.path:
-            raise ValueError("APP_ORIGIN must be an origin such as https://reading.example.com")
+            raise ValueError(
+                "APP_ORIGIN must be an origin such as https://reading.example.com")
         if parsed.query or parsed.fragment or parsed.username:
-            raise ValueError("APP_ORIGIN cannot include credentials, a query or a fragment")
+            raise ValueError(
+                "APP_ORIGIN cannot include credentials, a query or a fragment")
         return value
 
     @model_validator(mode="after")

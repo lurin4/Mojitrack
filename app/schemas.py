@@ -5,7 +5,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+Title = Annotated[str, StringConstraints(
+    strip_whitespace=True, min_length=1, max_length=500)]
 Positive = Annotated[int, Field(strict=True, gt=0, le=1_000_000_000)]
 
 
@@ -14,7 +15,8 @@ class Input(BaseModel):
 
 
 class Credentials(Input):
-    username: Annotated[str, StringConstraints(pattern=r"^[a-zA-Z0-9_]{3,40}$")]
+    username: Annotated[str, StringConstraints(
+        pattern=r"^[a-zA-Z0-9_]{3,40}$")]
     password: str = Field(min_length=12, max_length=128)
 
 

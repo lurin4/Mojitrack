@@ -21,14 +21,16 @@ class User(Base):
 class LoginSession(Base):
     __tablename__ = "sessions"
     token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey(
+        "users.id", ondelete="CASCADE"), index=True)
     expires: Mapped[int]
 
 
 class ApiToken(Base):
     __tablename__ = "api_tokens"
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey(
+        "users.id", ondelete="CASCADE"), unique=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
 
 

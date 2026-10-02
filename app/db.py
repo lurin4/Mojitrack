@@ -14,7 +14,8 @@ class Base(DeclarativeBase):
 url = make_url(settings().database_url)
 if url.drivername.startswith("sqlite") and url.database and url.database != ":memory:":
     Path(url.database).parent.mkdir(parents=True, exist_ok=True)
-engine = create_engine(url, connect_args={"check_same_thread": False} if url.drivername.startswith("sqlite") else {})
+engine = create_engine(url, connect_args={
+                       "check_same_thread": False} if url.drivername.startswith("sqlite") else {})
 
 if url.drivername.startswith("sqlite"):
     @event.listens_for(engine, "connect")
