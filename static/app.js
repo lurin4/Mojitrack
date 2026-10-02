@@ -286,6 +286,15 @@ function renderChart() {
 function action(icon, label, kind, id) {
   return `<button type="button" class="icon quiet" data-${kind}="${id}" title="${label}" aria-label="${label}"><i data-lucide="${icon}"></i></button>`;
 }
+function libraryProgress(item) {
+  const count = `${fmt(item.read_chars)} chars read`;
+  if (!item.total_chars) return count;
+  const percent = Math.min(100, (item.read_chars / item.total_chars) * 100);
+  const label = percent > 0 && percent < 0.01
+    ? "<0.01"
+    : fmt(Number(percent.toFixed(2)));
+  return `${count} \u00b7 ${label}%`;
+}
 function renderMedia() {
   const filter = $("status-filter").value;
   const query = $("library-query").value.trim().toLocaleLowerCase();
@@ -298,7 +307,7 @@ function renderMedia() {
     ? items
         .map(
           (m) =>
-            `<article class="book book-${esc(m.status)}"><button class="book-cover" type="button" data-progress="${m.id}" title="${esc(m.title)}" aria-label="Open ${esc(m.title)}"><span class="cover-fallback" aria-hidden="true">${esc(m.title)}</span>${coverImage(m)}</button><span class="book-type">${mediaType(m)}</span><span class="book-title" title="${esc(m.title)}">${esc(m.title)}</span><span class="book-mark"><i data-lucide="${m.status === "finished" ? "check" : "bookmark"}"></i>${esc(m.status)}</span><small>${m.total_chars ? `${Math.min(100, Math.round((m.read_chars / m.total_chars) * 100))}% read` : `${fmt(m.read_chars)} chars`}</small></article>`,
+            `<article class="book book-${esc(m.status)}"><button class="book-cover" type="button" data-progress="${m.id}" title="${esc(m.title)}" aria-label="Open ${esc(m.title)}"><span class="cover-fallback" aria-hidden="true">${esc(m.title)}</span>${coverImage(m)}</button><span class="book-type">${mediaType(m)}</span><span class="book-title" title="${esc(m.title)}">${esc(m.title)}</span><span class="book-mark"><i data-lucide="${m.status === "finished" ? "check" : "bookmark"}"></i>${esc(m.status)}</span><small>${esc(libraryProgress(m))}</small></article>`,
         )
         .join("")
     : `<div class="empty-library"><i data-lucide="book-open"></i><p>${media.length ? "No matching titles." : "Your next chapter starts here."}</p>${media.length ? "" : '<button type="button" class="secondary" data-new-title>Add your first title</button>'}</div>`;
