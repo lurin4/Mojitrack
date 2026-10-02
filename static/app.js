@@ -288,11 +288,11 @@ function action(icon, label, kind, id) {
 }
 function libraryProgress(item) {
   const count = `${fmt(item.read_chars)} chars read`;
+  if (item.status === "finished") return `${count} \u00b7 100%`;
   if (!item.total_chars) return count;
   const percent = Math.min(100, (item.read_chars / item.total_chars) * 100);
-  const label = percent > 0 && percent < 0.01
-    ? "<0.01"
-    : fmt(Number(percent.toFixed(2)));
+  const label =
+    percent > 0 && percent < 0.01 ? "<0.01" : fmt(Number(percent.toFixed(2)));
   return `${count} \u00b7 ${label}%`;
 }
 function renderMedia() {
@@ -745,7 +745,7 @@ document.addEventListener("click", async (e) => {
         ],
       ];
       $("title-details").innerHTML =
-        `<div class="title-facts">${facts.map(([label, value]) => `<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join("")}</div>${item.total_chars ? `<progress class="title-progress" value="${item.read_chars}" max="${item.total_chars}" aria-label="Title progress"></progress>` : ""}${item.jiten_id ? `<a href="https://jiten.moe/decks/${item.jiten_id}" target="_blank" rel="noopener">View on Jiten</a>` : ""}`;
+        `<div class="title-facts">${facts.map(([label, value]) => `<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join("")}</div>${item.total_chars || item.status === "finished" ? `<progress class="title-progress" value="${item.status === "finished" ? item.total_chars || 1 : item.read_chars}" max="${item.total_chars || 1}" aria-label="Title progress"></progress>` : ""}${item.jiten_id ? `<a href="https://jiten.moe/decks/${item.jiten_id}" target="_blank" rel="noopener">View on Jiten</a>` : ""}`;
       $("title-actions").innerHTML =
         `<button data-log-media="${item.id}"><i data-lucide="plus"></i>Log reading</button><button data-link-media="${item.id}"><i data-lucide="link"></i>${item.jiten_id ? "Change Jiten link" : "Link to Jiten"}</button>${action("pencil", "Edit title", "edit-media", item.id)}${item.jiten_id ? action("refresh-cw", "Refresh Jiten stats", "refresh", item.id) : ""}${action("trash-2", "Delete title", "delete-media", item.id)}`;
       icons();
