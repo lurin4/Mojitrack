@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#ffdf96" />
+    <title>Rin's Reading Tracker</title>
+    <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <link
+      rel="preload"
+      href="/static/fonts/CherryBombOne-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script defer src="/static/vendor/chart.umd.js"></script>
+    <script defer src="/static/vendor/lucide.js"></script>
+    <script defer src="/static/app.js"></script>
+  </head>
+  <body>
+    <p id="notice" role="status" aria-live="polite" hidden></p>
+    <div class="scrapbook">
+      <div class="lace lace-top" aria-hidden="true"></div>
+      <div class="lace lace-bottom" aria-hidden="true"></div>
+      <div class="lace lace-left" aria-hidden="true"></div>
+      <div class="lace lace-right" aria-hidden="true"></div>
+      <div class="paper">
+        <header class="page-header">
+          <h1 class="sr-only">Rin's Reading Tracker</h1>
+          <div id="signed-out-title" class="display-title">
+            Rin's Reading Tracker
+          </div>
+          <nav id="account" aria-label="Main navigation" hidden>
+            <button
+              type="button"
+              data-tab="dashboard"
+              class="active"
+              aria-current="page"
+            >
+              Homepage
+            </button>
+            <button type="button" data-tab="tools">Tools</button
+            ><button type="button" data-tab="history">Logs</button>
+            <button type="button" data-tab="settings">Settings</button
+            ><button type="button" id="logout">Sign out</button>
+          </nav>
+        </header>
+        <main>
+          <section id="auth-view" class="auth-view">
+            <img
+              class="auth-rin"
+              src="/static/assets/rin.png"
+              alt="Rin Kagamine"
+              width="340"
+              height="340"
+            />
+            <div class="soft-panel auth-panel">
+              <h2 class="frosted">reading journal</h2>
+              <form id="auth-form">
+                <label
+                  >Username<input
+                    name="username"
+                    autocomplete="username"
+                    pattern="[a-zA-Z0-9_]{3,40}"
+                    minlength="3"
+                    maxlength="40"
+                    required
+                /></label>
+                <label
+                  >Password<input
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    minlength="12"
+                    maxlength="128"
+                    required
+                /></label>
+                <div class="actions">
+                  <button type="submit" name="action" value="login">
+                    Sign in</button
+                  ><button
+                    type="submit"
+                    name="action"
+                    value="register"
+                    class="secondary"
+                  >
+                    Create account
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+          <div id="app-view" hidden>
+            <section id="dashboard" class="view" aria-label="Homepage">
+              <div class="logging-row">
+                <div class="rin-cutout">
+                  <img
+                    src="/static/assets/rin.png"
+                    alt="Rin Kagamine"
+                    width="340"
+                    height="340"
+                  />
+                </div>
+                <div class="soft-panel logging-panel">
+                  <form id="quick-log-form" class="quick-fields">
+                    <label
+                      >Media<select id="quick-media" name="media_id" required>
+                        <option value="">Choose a title</option>
+                      </select></label
+                    >
+                    <label
+                      >Date<input
+                        id="quick-date"
+                        name="date"
+                        type="date"
+                        required
+                    /></label>
+                    <label
+                      ><span lang="ja">文字</span
+                      ><input
+                        id="quick-chars"
+                        name="chars"
+                        aria-label="Characters read"
+                        type="number"
+                        min="1"
+                        max="1000000000"
+                        required
+                    /></label>
+                    <button id="quick-submit" class="log-button" type="submit">
+                      log it!
+                    </button>
+                  </form>
+                  <form id="quick-goal-form" class="quick-goal">
+                    <label for="quick-goal">daily goal</label
+                    ><input
+                      id="quick-goal"
+                      name="daily_goal"
+                      type="number"
+                      min="1"
+                      max="1000000000"
+                      aria-label="Daily character goal"
+                      required
+                    /><span lang="ja">文字</span
+                    ><button
+                      type="submit"
+                      class="icon quiet"
+                      title="Save daily goal"
+                      aria-label="Save daily goal"
+                    >
+                      <i data-lucide="check"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <section
+                class="soft-panel progress-panel"
+                aria-labelledby="progress-heading"
+              >
+                <h2 id="progress-heading" class="frosted">Today's progress</h2>
+                <div class="today-bar">
+                  <progress
+                    id="today-progress"
+                    max="1000"
+                    value="0"
+                    aria-label="Today's reading progress"
+                  ></progress
+                  ><span
+                    ><strong id="today-count">0</strong> /
+                    <span id="today-goal">1,000</span>
+                    <span lang="ja">文字</span></span
+                  >
+                </div>
+                <div class="progress-meta">
+                  <span>Streak: <strong id="reading-streak">0</strong></span
+                  ><span
+                    >All-time: <strong id="total-count">0</strong>
+                    <span lang="ja">文字</span></span
+                  >
+                </div>
+              </section>
+              <section
+                class="soft-panel heat-panel"
+                aria-labelledby="heat-heading"
+              >
+                <div class="panel-heading">
+                  <h2 id="heat-heading" class="frosted">Heatmap</h2>
+                  <div class="year-control">
+                    <button
+                      id="year-prev"
+                      class="icon quiet"
+                      aria-label="Previous year"
+                      title="Previous year"
+                    >
+                      <i data-lucide="chevron-left"></i></button
+                    ><label class="sr-only" for="heat-year">Calendar year</label
+                    ><input
+                      id="heat-year"
+                      type="number"
+                      min="1900"
+                      max="9998"
+                    /><button
+                      id="year-next"
+                      class="icon quiet"
+                      aria-label="Next year"
+                      title="Next year"
+                    >
+                      <i data-lucide="chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  class="heat-scroll"
+                  tabindex="0"
+                  aria-label="Scrollable yearly activity"
+                >
+                  <div
+                    id="heat-months"
+                    class="heat-months"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    id="heatmap"
+                    class="heatmap"
+                    aria-label="Reading activity"
+                  ></div>
+                </div>
+                <div class="heat-footer">
+                  <output id="heat-selection">Select a day</output>
+                  <div class="heat-legend" aria-label="Less to more reading">
+                    <span>Less</span><b data-level="0"></b><b data-level="1"></b
+                    ><b data-level="2"></b><b data-level="3"></b
+                    ><b data-level="4"></b><span>More</span>
+                  </div>
+                </div>
+              </section>
+              <section
+                id="library"
+                class="soft-panel library-panel"
+                aria-labelledby="library-heading"
+              >
+                <div class="panel-heading">
+                  <h2 id="library-heading" class="frosted">Library</h2>
+                  <div class="actions compact">
+                    <button
+                      id="find-title"
+                      class="icon quiet"
+                      title="Search Jiten"
+                      aria-label="Search Jiten"
+                    >
+                      <i data-lucide="search"></i></button
+                    ><button
+                      id="manual-add"
+                      class="icon quiet"
+                      title="Add a title"
+                      aria-label="Add a title"
+                    >
+                      <i data-lucide="plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="library-filters">
+                  <label class="sr-only" for="library-query"
+                    >Filter your titles</label
+                  ><input
+                    id="library-query"
+                    type="search"
+                    placeholder="Find in library"
+                    autocomplete="off"
+                  /><label class="sr-only" for="status-filter">Status</label
+                  ><select id="status-filter">
+                    <option value="all">All titles</option>
+                    <option value="reading">Reading</option>
+                    <option value="finished">Finished</option>
+                    <option value="dropped">Dropped</option>
+                  </select>
+                </div>
+                <div
+                  id="media-list"
+                  class="bookshelf"
+                  tabindex="0"
+                  aria-label="Your titles"
+                ></div>
+              </section>
+            </section>
+            <section id="tools" class="view" hidden>
+              <h2 class="view-heading frosted">Tools</h2>
+              <section class="soft-panel tool-panel">
+                <h3 class="frosted">Character counter</h3>
+                <form id="count-form">
+                  <label
+                    >Japanese text<textarea
+                      id="count-text"
+                      rows="5"
+                      maxlength="500000"
+                      required
+                    ></textarea>
+                  </label>
+                  <div class="actions">
+                    <button type="submit">Count characters</button
+                    ><output id="count-result" aria-live="polite"></output>
+                  </div>
+                </form>
+              </section>
+              <section class="soft-panel tool-panel">
+                <div class="section-heading">
+                  <h3 class="frosted">Daily reading</h3>
+                  <div class="segmented" aria-label="Chart period">
+                    <button data-days="7">7 days</button
+                    ><button data-days="30" class="active">30 days</button
+                    ><button data-days="90">90 days</button>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas
+                    id="daily-chart"
+                    aria-label="Daily characters by title"
+                    role="img"
+                  ></canvas>
+                </div>
+                <div id="more-stats" class="secondary-metrics"></div>
+              </section>
+            </section>
+            <section id="history" class="view" hidden>
+              <div class="section-heading">
+                <h2 class="view-heading frosted">Reading logs</h2>
+                <button id="history-log">
+                  <i data-lucide="plus"></i>Log reading
+                </button>
+              </div>
+              <div class="soft-panel history-panel">
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Characters</th>
+                        <th>Minutes</th>
+                        <th><span class="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody id="log-rows"></tbody>
+                  </table>
+                </div>
+                <div class="pagination">
+                  <button id="history-prev" class="secondary">Previous</button
+                  ><span id="history-page"></span
+                  ><button id="history-next" class="secondary">Next</button>
+                </div>
+              </div>
+            </section>
+            <section id="settings" class="view" hidden>
+              <h2 class="view-heading frosted">Settings</h2>
+              <p class="account-label">
+                Signed in as <strong id="username"></strong>
+              </p>
+              <section class="soft-panel tool-panel">
+                <h3 class="frosted">Goals &amp; profile</h3>
+                <form id="settings-form" class="form-grid">
+                  <label
+                    >Daily characters<input
+                      name="daily_goal"
+                      type="number"
+                      min="1"
+                      max="1000000000"
+                      required /></label
+                  ><label
+                    >Weekly characters<input
+                      name="weekly_goal"
+                      type="number"
+                      min="1"
+                      max="1000000000"
+                      required /></label
+                  ><label
+                    >Monthly characters<input
+                      name="monthly_goal"
+                      type="number"
+                      min="1"
+                      max="1000000000"
+                      required /></label
+                  ><label
+                    >Timezone<input
+                      name="timezone"
+                      placeholder="Europe/London"
+                      required /></label
+                  ><label class="check"
+                    ><input type="checkbox" name="public_profile" />Public
+                    profile</label
+                  >
+                  <div class="actions">
+                    <button type="submit">Save settings</button
+                    ><a id="profile-link" hidden target="_blank" rel="noopener"
+                      >View public profile</a
+                    >
+                  </div>
+                </form>
+              </section>
+              <section class="soft-panel tool-panel">
+                <h3 class="frosted">Export</h3>
+                <div class="actions">
+                  <a class="button secondary" href="/api/export.csv" download
+                    ><i data-lucide="download"></i>CSV</a
+                  ><a class="button secondary" href="/api/export.json" download
+                    ><i data-lucide="download"></i>JSON</a
+                  >
+                </div>
+              </section>
+              <section class="soft-panel tool-panel">
+                <h3 class="frosted">Import reading data</h3>
+                <form id="import-form">
+                  <label
+                    >JSON file<input
+                      id="import-file"
+                      type="file"
+                      accept=".json,application/json"
+                      required /></label
+                  ><label
+                    >Source user ID (for your old bot JSON)<input
+                      id="source-user"
+                      maxlength="80" /></label
+                  ><label class="check"
+                    ><input type="checkbox" id="import-goal" checked />Import
+                    saved daily goal</label
+                  >
+                  <div class="actions">
+                    <button type="submit" class="secondary">
+                      Preview import</button
+                    ><button id="apply-import" type="button" hidden>
+                      Import records
+                    </button>
+                  </div>
+                  <p id="import-result" role="status"></p>
+                </form>
+              </section>
+              <section class="soft-panel tool-panel">
+                <h3 class="frosted">Personal API token</h3>
+                <p class="muted">
+                  A token gives full access to your account. Creating one
+                  replaces the previous token.
+                </p>
+                <div class="actions">
+                  <button id="create-token" class="secondary">
+                    Create token</button
+                  ><button id="revoke-token" class="danger secondary">
+                    Revoke token
+                  </button>
+                </div>
+                <label id="token-label" hidden
+                  >New token<input id="token-value" readonly autocomplete="off"
+                /></label>
+              </section>
+            </section>
+          </div>
+        </main>
+        <footer>
+          <span>Rin's Reading Tracker</span
+          ><span
+            >Stats by
+            <a href="https://jiten.moe" target="_blank" rel="noopener">Jiten</a>
+            &middot;
+            <a
+              href="https://creativecommons.org/licenses/by-sa/4.0/"
+              target="_blank"
+              rel="noopener"
+              >CC BY-SA 4.0</a
+            ></span
+          >
+        </footer>
+      </div>
+    </div>
+    <dialog id="search-dialog">
+      <div class="section-heading">
+        <h2>Enter new media</h2>
+        <button
+          class="icon quiet"
+          data-close="search-dialog"
+          aria-label="Close"
+          title="Close"
+        >
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="search-form" class="search">
+        <label>Type<select id="search-type"><option value="novel">Novel</option><option value="visual_novel">Visual novel</option></select></label>
+        <label class="grow"
+          >Jiten title search<input
+            id="search-query"
+            maxlength="200"
+            required
+            placeholder="Japanese, English or romaji" /></label
+        ><button
+          type="submit"
+          class="icon"
+          title="Search Jiten"
+          aria-label="Search Jiten"
+        >
+          <i data-lucide="search"></i>
+        </button>
+      </form>
+      <div id="search-results" hidden></div>
+      <div class="pagination" id="search-pages" hidden>
+        <button id="search-prev" class="secondary">Previous</button
+        ><button id="search-next" class="secondary">More results</button>
+      </div>
+    </dialog>
+    <dialog id="log-dialog">
+      <form id="log-form">
+        <div class="section-heading">
+          <h2 id="log-heading">Log reading</h2>
+          <button
+            type="button"
+            class="icon quiet"
+            data-close="log-dialog"
+            aria-label="Close"
+            title="Close"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <input name="id" type="hidden" /><label
+          >Title<select name="media_id" required></select></label
+        ><label>Date<input name="date" type="date" required /></label>
+        <div class="form-grid">
+          <label
+            >Characters<input
+              name="chars"
+              type="number"
+              min="1"
+              max="1000000000"
+              required /></label
+          ><label
+            >Minutes (optional)<input
+              name="minutes"
+              type="number"
+              min="1"
+              max="1440"
+          /></label>
+        </div>
+        <button type="submit">Save reading</button>
+      </form>
+    </dialog>
+    <dialog id="media-dialog">
+      <form id="media-form">
+        <div class="section-heading">
+          <h2 id="media-heading">Add title</h2>
+          <button
+            type="button"
+            class="icon quiet"
+            data-close="media-dialog"
+            aria-label="Close"
+            title="Close"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <input name="id" type="hidden" /><label
+          >Title<input name="title" maxlength="500" required
+        /></label>
+        <div class="form-grid">
+          <label
+            >Type<select name="media_type">
+              <option value="novel">Novel</option>
+              <option value="visual_novel">Visual novel</option>
+              <option value="manga">Manga</option>
+              <option value="other">Other</option>
+            </select></label
+          ><label
+            >Status<select name="status">
+              <option value="reading">Reading</option>
+              <option value="finished">Finished</option>
+              <option value="dropped">Dropped</option>
+            </select></label
+          >
+        </div>
+        <label
+          >Total characters (optional)<input
+            name="total_chars"
+            type="number"
+            min="1"
+            max="1000000000" /></label
+        ><button type="submit">Save title</button>
+      </form>
+    </dialog>
+    <dialog id="progress-dialog">
+      <div class="section-heading">
+        <h2 id="progress-title">Title progress</h2>
+        <button
+          class="icon quiet"
+          data-close="progress-dialog"
+          aria-label="Close"
+          title="Close"
+        >
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div id="title-details"></div>
+      <div class="chart-wrap">
+        <canvas
+          id="progress-chart"
+          aria-label="Cumulative title progress"
+          role="img"
+        ></canvas>
+      </div>
+      <p id="finish-estimate"></p>
+      <div id="title-actions" class="actions"></div>
+    </dialog>
+  </body>
+</html>
