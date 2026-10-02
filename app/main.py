@@ -54,7 +54,8 @@ class BodyLimit:
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=[
-        urlsplit(settings().app_origin).hostname,
+        "mojitrack.com",
+        "www.mojitrack.com",
         "*.up.railway.app",
         "localhost",
         "127.0.0.1",
