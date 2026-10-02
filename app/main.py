@@ -51,41 +51,39 @@ class BodyLimit:
         await self.app(scope, replay, send)
 
 
-app.add_middleware(BodyLimit)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=[urlsplit(
-    settings().app_origin).hostname, "localhost", "127.0.0.1", "testserver"])
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=[
-        "mojitrack.com",
-        "www.mojitrack.com",
+        urlsplit(settings().app_origin).hostname,
         "*.up.railway.app",
         "localhost",
         "127.0.0.1",
+        "testserver",
     ],
+)
 
 
-@ app.middleware("http")
+@app.middleware("http")
 async def security(request: Request, call_next):
     if request.method not in ("GET", "HEAD", "OPTIONS"):
-        origin=request.headers.get("origin")
-        bearer=request.headers.get("authorization", "").startswith("Bearer ")
+        origin = request.headers.get("origin")
+        bearer = request.headers.get("authorization", "").startswith("Bearer ")
         if origin and origin != settings().app_origin:
             return JSONResponse({"detail": "Origin is not allowed"}, status_code=403)
         if not bearer and request.headers.get("x-reading-site") != "1":
             return JSONResponse({"detail": "Missing X-Reading-Site header"}, status_code=403)
-    response=await call_next(request)
-    response.headers["X-Content-Type-Options"]="nosniff"
-    response.headers["X-Frame-Options"]="DENY"
-    response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     if request.url.path.startswith(("/api/", "/profile/")):
-        response.headers["Cache-Control"]="no-store"
+        response.headers["Cache-Control"] = "no-store"
     if settings().cookie_secure:
-        response.headers["Strict-Transport-Security"]="max-age=31536000"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
 
 
-@ app.exception_handler(IntegrityError)
+@app.exception_handler(IntegrityError)
 async def integrity_error(request, exc):
     return JSONResponse({"detail": "This change conflicts with an existing record"}, status_code=409)
 
@@ -94,28 +92,28 @@ for router in (auth.router, logs.router, media.router, stats.router, transfer.ro
     app.include_router(router)
 
 
-@ app.get("/api/public/{username}")
+@app.get("/api/public/{username}")
 def public_profile(username: str, db: DB):
-    user=db.scalar(select(User).where(User.username ==
-                   username.lower(), User.public_profile.is_(True)))
+    user = db.scalar(select(User).where(User.username ==
+                                        username.lower(), User.public_profile.is_(True)))
     if not user:
         raise HTTPException(404, "Profile not found")
-    values=summary(stats.user_logs(db, user), user, today_for(user))
+    values = summary(stats.user_logs(db, user), user, today_for(user))
     return {"username": user.username, **{key: values[key] for key in ("total_chars", "reading_days", "reading_streak", "goal_streak")}}
 
 
-@ app.get("/health")
+@app.get("/health")
 def health(db: DB):
     db.execute(select(User.id).limit(1))
     return {"ok": True}
 
 
-@ app.get("/")
+@app.get("/")
 def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
-@ app.get("/profile/{username}")
+@app.get("/profile/{username}")
 def profile_page(username: str):
     return FileResponse(ROOT / "static" / "profile.html")
 
